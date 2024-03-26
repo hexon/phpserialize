@@ -23,6 +23,7 @@ type structTag struct {
 	Bar     int     `php:"foo"`
 	hidden  bool
 	Balu    string   `php:"baz"`
+	Poko    string   `json:"pika"`
 	Ignored string   `php:"-"`
 	Nilptr  *Struct2 `php:",omitnilptr"`
 }
@@ -56,6 +57,13 @@ func getStdClassOnly() *phpserialize.MarshalOptions {
 	stdClassOnly.OnlyStdClass = true
 
 	return stdClassOnly
+}
+
+func getUseJsonTag() *phpserialize.MarshalOptions {
+	useJsonTag := phpserialize.DefaultMarshalOptions()
+	useJsonTag.UseJsonTag = true
+
+	return useJsonTag
 }
 
 // These tests have been adapted from the wonderful work at:
@@ -163,9 +171,16 @@ var marshalTests = map[string]marshalTest{
 
 	// encode object (struct with tags)
 	"structTag{Bar int, Foo Struct2{Qux float64}, hidden bool, Balu string, Nilptr <nil>}": {
-		structTag{Struct2{1.23}, 10, true, "yay", "", nil},
-		[]byte("O:9:\"structTag\":3:{s:3:\"bar\";O:7:\"Struct2\":1:{s:3:\"qux\";d:1.23;}s:3:\"foo\";i:10;s:3:\"baz\";s:3:\"yay\";}"),
+		structTag{Struct2{1.23}, 10, true, "yay", "papa", "", nil},
+		[]byte("O:9:\"structTag\":4:{s:3:\"bar\";O:7:\"Struct2\":1:{s:3:\"qux\";d:1.23;}s:3:\"foo\";i:10;s:3:\"baz\";s:3:\"yay\";s:4:\"poko\";s:4:\"papa\";}"),
 		nil,
+	},
+
+	// encode object (struct with tags and 1 json tag)
+	"structJsonTag{Bar int, Foo Struct2{Qux float64}, hidden bool, Balu string, Nilptr <nil>}": {
+		structTag{Struct2{1.23}, 10, true, "yay", "papa", "", nil},
+		[]byte("O:9:\"structTag\":4:{s:3:\"bar\";O:7:\"Struct2\":1:{s:3:\"qux\";d:1.23;}s:3:\"foo\";i:10;s:3:\"baz\";s:3:\"yay\";s:4:\"pika\";s:4:\"papa\";}"),
+		getUseJsonTag(),
 	},
 
 	// stdClassOnly

@@ -15,6 +15,9 @@ type MarshalOptions struct {
 	// If this is true, then all struct names will be stripped from objects
 	// and "stdClass" will be used instead. The default value is false.
 	OnlyStdClass bool
+	// If this is true, json tags on struct fields are used if no php tag is set.
+	// The default value is false.
+	UseJsonTag bool
 }
 
 // DefaultMarshalOptions will create a new instance of MarshalOptions with
@@ -22,6 +25,7 @@ type MarshalOptions struct {
 func DefaultMarshalOptions() *MarshalOptions {
 	options := new(MarshalOptions)
 	options.OnlyStdClass = false
+	options.UseJsonTag = false
 
 	return options
 }
@@ -162,6 +166,9 @@ func MarshalStruct(input interface{}, options *MarshalOptions) ([]byte, error) {
 		visibleFieldCount++
 
 		fieldName, fieldOptions := parseTag(typeOfValue.Field(i).Tag.Get("php"))
+		if fieldName == "" && options.UseJsonTag {
+			fieldName, _ = parseTag(typeOfValue.Field(i).Tag.Get("json"))
+		}
 
 		if fieldOptions.Contains("omitnilptr") {
 			if f.Kind() == reflect.Ptr && f.IsNil() {
